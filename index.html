@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Elektrik Bütçe</title>
+  <meta name="description" content="Hedef faturana göre cihaz kullanım bütçesi çıkar.">
+  <meta name="theme-color" content="#15171c">
+  <!-- PWA dosyaları -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <!-- iPhone: ana ekrana eklenince tarayıcı çubuğu olmadan, uygulama gibi açılsın -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Elk. Bütçe">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Üst çubuk: başlık + tema düğmesi -->
+  <header class="ust-cubuk">
+    <button id="geri-btn" class="ikon-btn" aria-label="Geri" hidden>←</button>
+    <h1 id="baslik">⚡ Elektrik Bütçe</h1>
+    <button id="tema-btn" class="ikon-btn" aria-label="Görünüm ve renk" aria-expanded="false">🎨</button>
+  </header>
+
+  <!-- Tema paneli: görünüm (açık/koyu) ve vurgu rengi -->
+  <div id="tema-panel" class="tema-panel kart" hidden>
+    <p class="tema-baslik">Görünüm</p>
+    <div class="secenekler" id="mod-secenekler">
+      <button type="button" data-mod="">Otomatik</button>
+      <button type="button" data-mod="light">Açık</button>
+      <button type="button" data-mod="dark">Koyu</button>
+    </div>
+    <p class="tema-baslik">Renk</p>
+    <div class="renk-secenekler" id="renk-secenekler">
+      <button type="button" data-renk="" aria-label="Turuncu"><span class="renk-orn turuncu"></span>Turuncu</button>
+      <button type="button" data-renk="kirmizi" aria-label="Kırmızı"><span class="renk-orn kirmizi"></span>Kırmızı</button>
+      <button type="button" data-renk="mavi" aria-label="Mavi"><span class="renk-orn mavi"></span>Mavi</button>
+      <button type="button" data-renk="mor" aria-label="Mor"><span class="renk-orn mor"></span>Mor</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- ================= EKRAN 1: ANA SAYFA ================= -->
+    <section id="ekran-ana" class="ekran">
+      <div class="kart hedef-kart">
+        <label for="hedef-input">Hedef aylık fatura (TL)</label>
+        <input id="hedef-input" type="number" inputmode="decimal" min="0" placeholder="1000">
+      </div>
+
+      <button id="cihaz-ekle-btn" class="btn btn-ikincil btn-tam">+ Cihaz Ekle</button>
+
+      <h2 class="bolum-baslik">Cihazlarım</h2>
+      <ul id="cihaz-listesi" class="liste"></ul>
+      <p id="bos-liste" class="ipucu">Henüz cihaz yok. "Cihaz Ekle" ile başla.</p>
+
+      <div class="alt-butonlar">
+        <button id="ayrinti-btn" class="btn btn-ikincil">Ayrıntılar</button>
+        <button id="hesapla-btn" class="btn btn-ana">Hesapla</button>
+      </div>
+    </section>
+
+    <!-- ================= EKRAN 3: AYRINTILAR (isteğe bağlı) ================= -->
+    <section id="ekran-ayrinti" class="ekran" hidden>
+      <p class="ipucu">Hepsi isteğe bağlı. Boş bırakırsan ortalama bir hane varsayılır.</p>
+      <div class="kart form">
+        <label for="ay-kisi">Kaç kişilik hane?</label>
+        <input id="ay-kisi" type="number" inputmode="numeric" min="1" max="15" placeholder="3">
+
+        <label for="ay-oda">Kaç oda?</label>
+        <input id="ay-oda" type="number" inputmode="numeric" min="1" max="15" placeholder="3">
+
+        <label>Isınma şekli</label>
+        <div class="secenekler" data-alan="isinma">
+          <button data-deger="elektrik">Elektrik</button>
+          <button data-deger="dogalgaz">Doğalgaz</button>
+          <button data-deger="soba">Soba</button>
+          <button data-deger="klima">Klima</button>
+        </div>
+
+        <label>Mevsim</label>
+        <div class="secenekler" data-alan="mevsim">
+          <button data-deger="yaz">Yaz</button>
+          <button data-deger="kis">Kış</button>
+          <button data-deger="ara">Ara mevsim</button>
+        </div>
+      </div>
+      <div class="alt-butonlar">
+        <button id="ayrinti-temizle-btn" class="btn btn-ikincil">Temizle</button>
+        <button id="ayrinti-kaydet-btn" class="btn btn-ana">Kaydet</button>
+      </div>
+    </section>
+
+    <!-- ================= EKRAN 2: CİHAZ EKLEME ================= -->
+    <section id="ekran-cihaz" class="ekran" hidden>
+      <div class="kart form">
+        <label for="katalog-sec">Hazır listeden seç</label>
+        <select id="katalog-sec"></select>
+
+        <!-- Marka/model seçimi: sadece MODEL_KATALOGU'nda olan cihazlarda görünür -->
+        <div id="model-bolum" class="model-bolum" hidden>
+          <label for="model-ara">Kendi modelini bul (isteğe bağlı)</label>
+          <input id="model-ara" type="text" placeholder="Marka veya model yaz, ör. Arçelik">
+          <div id="model-kategoriler" class="secenekler"></div>
+          <ul id="model-listesi" class="model-liste"></ul>
+          <p class="ipucu kucuk">Değerler enerji etiketlerinden alındı. Kendi cihazının etiketiyle karşılaştırabilirsin.</p>
+        </div>
+
+        <label for="cihaz-ad">Cihaz adı</label>
+        <input id="cihaz-ad" type="text" placeholder="Örn. Akvaryum motoru">
+
+        <label for="cihaz-watt" id="watt-etiket">Güç (watt)</label>
+        <input id="cihaz-watt" type="number" inputmode="numeric" min="1" placeholder="100">
+        <p class="ipucu">Değer ortalamadır; cihazın etiketindeki watt değerini yazabilirsin.</p>
+
+        <!-- Ampul sayısı: sadece aydınlatmada görünür -->
+        <div id="ampul-bolum" class="ek-bolum" hidden>
+          <label for="ampul-sayisi">Ampul sayısı</label>
+          <div class="sayac">
+            <button type="button" id="ampul-eksi" aria-label="Bir azalt">−</button>
+            <input id="ampul-sayisi" type="number" inputmode="numeric" min="1" max="100" value="6">
+            <button type="button" id="ampul-arti" aria-label="Bir artır">+</button>
+          </div>
+          <p id="ampul-toplam" class="ipucu"></p>
+        </div>
+
+        <!-- Kullanım sorusu: cihaza göre "günde kaç saat" ya da "haftada kaç kez" -->
+        <div id="kullanim-bolum" class="ek-bolum" hidden>
+          <label id="kullanim-etiket">Bu cihaz günde kaç saat çalışıyor?</label>
+          <div id="kullanim-secenekler" class="secenekler saat-cipleri"></div>
+          <input id="kullanim-diger" type="number" inputmode="decimal" min="0" step="0.5"
+                 placeholder="Daha fazlaysa yaz">
+          <p id="kullanim-ozet" class="ipucu">Boş bırakırsan ortalama kullanım varsayılır.</p>
+        </div>
+
+        <label class="onay">
+          <input id="cihaz-surekli" type="checkbox">
+          <span>Sürekli çalışır (buzdolabı gibi 7/24 prizde)</span>
+        </label>
+      </div>
+      <button id="cihaz-kaydet-btn" class="btn btn-ana btn-tam">Kaydet</button>
+    </section>
+
+    <!-- ================= EKRAN 4: SONUÇ ================= -->
+    <section id="ekran-sonuc" class="ekran" hidden>
+      <div class="kart ozet">
+        <span class="ozet-etiket">Tahmini fatura</span>
+        <span id="ozet-fatura" class="buyuk-sayi">0 TL</span>
+        <div class="ozet-satir">
+          <span>Toplam tüketim <b id="ozet-kwh">0 kWh</b></span>
+          <span>Bütçe <b id="ozet-butce">0 kWh</b></span>
+        </div>
+      </div>
+      <p id="uyari" class="uyari" hidden></p>
+
+      <h2 class="bolum-baslik">Neye ne kadar harcanıyor?</h2>
+      <div id="grafik" class="kart grafik"></div>
+
+      <!-- Tasarruf ipuçları: plana göre otomatik yazılır -->
+      <div id="ipucu-kart" class="kart ipucu-kart" hidden>
+        <h3>💡 Nerelerden kısabilirsin?</h3>
+        <ul id="ipucu-listesi"></ul>
+      </div>
+
+      <h2 class="bolum-baslik">Kullanım planı</h2>
+      <p class="ipucu">Bir cihazın aylık saatini değiştirirsen diğerleri buna göre yeniden ayarlanır.</p>
+      <ul id="sonuc-listesi" class="liste"></ul>
+      <button id="sifirla-btn" class="btn btn-ikincil btn-tam" hidden>Elle yaptığım değişiklikleri sıfırla</button>
+      <p class="ipucu kucuk">Tarife değerleri tahminidir. Gerçek fatura farklı olabilir.</p>
+    </section>
+  </main>
+
+  <!-- Sıra önemli: önce ayarlar, sonra hesap, en son arayüz -->
+  <script src="ayarlar.js"></script>
+  <script src="hesap.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
