@@ -100,11 +100,23 @@ modelini seç: watt otomatik dolar.
 - Sağ üstteki 🎨 düğmesi: **Görünüm** (Otomatik / Açık / Koyu) ve **Renk** (Turuncu, Kırmızı,
   Mavi, Mor). Renkler `style.css` → `[data-renk="..."]` kurallarında, açık ve koyu tema için ayrı ton.
 
-## iPhone'a yükleme (App Store olmadan)
+## Canlı site ve iPhone'a yükleme (App Store olmadan)
 
-1. Klasörü **https** adresli ücretsiz bir yere yükle (GitHub Pages veya Netlify).
-2. iPhone'da linki **Safari** ile aç → Paylaş düğmesi → **Ana Ekrana Ekle**.
-3. Uygulama ana ekrandan tam ekran açılır, internet olmadan da çalışır, veriler telefonda kalır.
+- **Site:** https://ensozrr.github.io/elektrik-butce/
+- **Kod:** https://github.com/Ensozrr/elektrik-butce (GitHub Pages, `main` dalının kökünden yayınlanır)
+
+iPhone'da linki **Safari** ile aç → Paylaş düğmesi → **Ana Ekrana Ekle**. Uygulama ana ekrandan
+tam ekran açılır, internet olmadan da çalışır, veriler telefonda kalır.
+
+**Güncelleme yayınlamak:** kodu değiştir, `sw.js` içindeki `ONBELLEK` sürümünü artır, sonra:
+
+```bash
+git add -A
+git commit -m "Ne değişti"
+git push
+```
+
+1-2 dakika içinde site güncellenir. Telefonda uygulamayı kapatıp açınca yeni sürüm gelir.
 
 ## ⚠️ Tarifeyi güncelle
 
